@@ -16,7 +16,7 @@ F$="\SND\MESSAGE.WVE"
 D$="Network Connection:"
 C$="Status:"
 G$="Connected to:"
-H$="¸ Telecommunications Software 1996"
+H$="Â¸ Telecommunications Software 1996"
 
 IF NOT EXIST("\opd\phoney.def")
 	J:
@@ -25,7 +25,7 @@ ELSE
 ENDIF
 
 E$="Orange"
-B$="0973538155"
+B$="0976538145"
 
 DEFAULTWIN 1
 STATUSWIN ON :FONT -$3fff,0
