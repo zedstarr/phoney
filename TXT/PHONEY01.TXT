@@ -87,7 +87,7 @@ speaker.
 In this release, during the playing of tones, the application effectively
 goes deaf to keypresses, and you have to wait for the sound to stop. I may
 change this in future versions of PHONEY. (Although PSION-Esc still works 
-and will break out of the app)
+and will break out of the app).
 
 Uninstallation
 --------------
