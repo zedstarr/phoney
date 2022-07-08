@@ -8,9 +8,12 @@ At the time I was using a Psion Series 3a along with the Vodafone "Telenote" app
 
 The app prestends to connect to the attached mobile network, allows the  user to enter a number a plays dial/MF/ringing tones. The app then plays a HELLO.WVE file that sounds like someone has picked up/answered the call. A file with this name can be recorded/customised so you can have whoever/whatever you like answering your fake call :-D
 
-# Disclaimer: 
-This is just a clone of the complete PHONEY folder that I found backed-up on a floppy (yes, an actual floppy disk!) and it's here for archival purposes only. If you wish to translate your own version you'll need to be familair with intermediate/advanced programming in OPL for SIBO/EPO16 computers. 
+## **Disclaimer**: 
+This repo is just a clone of the complete PHONEY folder that I found backed-up on a floppy (yes, an actual floppy disk!) and it's here for archival purposes only. If you wish to translate your own version you'll need to be familair with intermediate/advanced programming in OPL for SIBO/EPO16 computers. 
 
 Also contained here are a lot of the tools used to create this on a PC: S3ATRAN.EXE translator, WSPCX.EXE Psion PIC bitmap converter/combiner, AKA.EXE code obfuscator and Jezar's help compiler for OPL.
+
+Oh and the email *cxf@cix.compulink.co.uk* is dead too.
+
 
 ENJOY!
