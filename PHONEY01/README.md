@@ -1,3 +1,3 @@
-Relase package:
+Release package:
 
-PHONEY01.ZIP relase sometime in 1996
+PHONEY01.ZIP released sometime in 1996
