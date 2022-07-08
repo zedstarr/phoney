@@ -1,0 +1,50 @@
+
+PROC LoadPic%:(im%)
+	LOCAL id%,wi%,ht%
+	LOCAL f$(128),buf%(100)
+	LOCAL h%,l%,o%
+
+	rem This procedure replaces calls to gLOADBIT for loading
+	rem pictures embedded in an application
+
+	f$=CMD$(1)
+	l%=IOOPEN(h%,f$,$400)
+
+	IF l% 
+		GOTO error2 
+	ENDIF
+
+	l%=IOREAD(h%,ADDR(buf%(1)),200)
+
+	IF l%<=140 
+		GOTO error 
+	ENDIF
+
+	IF buf%(1)<>%O+(%P*256)
+		GOTO error
+	ENDIF
+
+	IF buf%(2)<>%L+(%O*256)
+		GOTO error
+	ENDIF
+
+	o%=23+(buf%(11) and $ff)
+	l%=PEEKW(ADDR(buf%(1))+o%)
+
+	IF l%<>%P+(%I*256)
+		GOTO error
+	ENDIF
+
+	IF l%=0 
+		GOTO error 
+	ENDIF
+
+	CALL($5f8d,1,o%,0,0,0)
+
+	error::
+	IOCLOSE(h%)
+	error2::
+
+	id%=gLoadBit(f$,0,im%)
+	RETURN id%
+ENDP

@@ -1,0 +1,45 @@
+TeleLink v2.01F
+
+#begin
+Connecting to the network
+The software will attempt to negotiate a
+connection with your chosen service provider.
+
+Should this not be possible, you will not be
+able to make or receive any calls.
+#end
+
+#begin
+Making a call
+The number to dial is requested and then the
+software attempts to connect to it.
+#end
+
+#begin
+Receiving a call
+When an incoming call is detected, the TeleLink
+application will move to the foreground and notify
+you of call presentation by playing the ringing
+sound you have chosen.
+#end
+
+#begin
+Call Divert
+The software will unconditionally divert all calls,
+divert any calls that can't connect because you are
+already on a call to someone else or divert all
+calls that are not answered after a certain time.
+#end
+
+#begin
+Do not Disturb
+At times when it would not appropriate for you to
+receive calls, you can set various Do not Disturb
+options:
+
+You can divert all calls to your Voicemail (if your
+network provides this facility)
+
+You can set the software so that it provides a
+discreet bleep on call arrival
+#end

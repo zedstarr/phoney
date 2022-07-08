@@ -1,0 +1,433 @@
+PROC Main:
+
+global tone%,delay%,pause%,mode%,vol%
+global tone$(2),delay$(2),pause$(2),mode$(2),vol$(1)
+
+local  ret%,sndHand%
+local  ref%,digit$(32),p%
+
+screen 60,20
+
+tone$="6" :delay$="2" :pause$="24" :mode$="-1" :vol$="2"
+tone%=6 :delay%=2 :pause%=24 :mode%=-1 :vol%=2
+
+if not exist ("mcmf.def")
+	create "mcmf.def",a,mode%,tone%,delay%,pause%,vol%
+	a.mode%=mode%
+	a.tone%=tone%
+	a.delay%=delay%
+	a.pause%=pause%
+	a.vol%=vol%
+	append
+	close
+	updte:
+else
+	trap openr "mcmf.def",a,mode%,tone%,delay%,pause%,vol%
+	if err
+		showerr:(err)
+	else
+		mode%=a.mode%
+		tone%=a.tone%
+		delay%=a.delay%
+		pause%=a.pause%
+		vol%=a.vol%
+	endif
+	trap close
+endif
+
+drwscrn:
+
+do
+	at 1,9
+	print " ->",
+	if mode%
+		edit digit$
+	else
+		digit$=get$
+	endif
+	digit$=upper$(digit$)
+	if digit$="U"
+		updte:
+		drwscrn:
+		digit$=""
+	elseif digit$="L"
+		if mode%
+			digit$=strip$:(bring$:)
+		else
+			digit$=""
+		endif
+	elseif digit$="M"
+		mode%=not mode%
+		trap open "mcmf.def",a,mode%,tone%,delay%,pause%
+		if err
+			showerr:(err)
+		else
+			a.mode%=mode%
+			update
+		endif
+		trap close
+		drwscrn:
+		digit$=""
+	elseif digit$<>"X" and digit$<>""
+		ret%=IOOPEN(sndHand%,"SND:",-1)
+		if ret%<0
+			print "Failed to open SND: device"
+			print err$(err)
+			get
+		else
+			p%=1
+			do
+				ref%=loc("123A456B789C*0#D,",mid$(digit$,p%,1))
+				if ref%
+					if not mode%
+						print digit$;
+					endif
+					dtmf:(sndHand%,ref%)
+					if mode%
+						pause delay%
+					endif
+					p%=p%+1
+				else
+					digit$=left$(digit$,p%-1)+right$(digit$,len(digit$)-p%)
+				endif
+			until p%>len(digit$)
+			ioclose(sndHand%)
+			if not mode%
+				digit$=""
+			endif
+		endif
+	endif
+until digit$="X"
+
+ENDP
+
+
+PROC Dtmf:(sndHand%,ref%)
+
+local freq1%(17),freq2%(17),play1%(2),play2%(2)
+local ret%,s1stat%,count%,len1%,len2%,cfg%
+
+rem define High group of MF freqs
+
+freq1%(1)=1209
+freq1%(2)=1336
+freq1%(3)=1477
+freq1%(4)=1632
+freq1%(5)=1209
+freq1%(6)=1336
+freq1%(7)=1477
+freq1%(8)=1632
+freq1%(9)=1209
+freq1%(10)=1336
+freq1%(11)=1477
+freq1%(12)=1632
+freq1%(13)=1209
+freq1%(14)=1336
+freq1%(15)=1477
+freq1%(16)=1632
+freq1%(17)=0     rem freq of "pause", i.e. silence
+len1%=1          rem number of notes in freq 1
+
+rem define low group of MF freqs
+  
+freq2%(1)=697
+freq2%(2)=697
+freq2%(3)=697
+freq2%(4)=697
+freq2%(5)=770
+freq2%(6)=770
+freq2%(7)=770
+freq2%(8)=770
+freq2%(9)=852
+freq2%(10)=852
+freq2%(11)=852
+freq2%(12)=852
+freq2%(13)=941
+freq2%(14)=941
+freq2%(15)=941
+freq2%(16)=941
+freq2%(17)=0    rem freq of "pause" i.e. silence
+len2%=1         rem number of notes in freq 2
+
+play1%(1)=freq1%(ref%) :play1%(2)=tone%
+play2%(1)=freq2%(ref%) :play2%(2)=tone%
+
+if ref%>16      rem i.e "pause"
+	play1%(2)=pause%
+	play2%(2)=pause%
+endif
+
+rem Set volume & bpm
+
+rem cfg%=6-vol%*2 rem for Series 3/3a
+cfg%=7-vol%*2
+if cfg%>2
+	cfg%=cfg%-1
+endif
+cfg%=$0100*cfg% + $00F0
+IOW(sndHand%,7,cfg%,#0)
+
+rem voice 1 asynchronous
+
+ret%=IOA(sndhand%,1,s1stat%,play1%(),len1%)
+if ret%<0
+	if ret%=-46
+		raise -1
+	endif
+	s1stat%=ret%
+	iosignal
+endif
+
+rem voice 2 synchronous
+
+IOW(sndHand%,2,play2%(),len2%)
+
+while s1stat%=-46     rem i.e. not finished
+	IOWAIT              rem wait for signal
+	if s1stat%=-46      rem not ours
+		count%=count%+1   rem so count up stray signals
+	endif
+endwh
+
+rem Put back all stray signals
+while count%
+	iosignal
+	count%=count%-1
+endwh
+
+ENDP
+
+
+PROC updte:
+
+trap open "mcmf.def",a,mode%,tone%,delay%,pause%,vol%
+if err
+	showerr:(err)
+else
+	tone$=gen$(a.tone%,2)
+	delay$=gen$(int(flt(a.delay%)/20*24),2)
+	pause$=gen$(a.pause%,2)
+	vol$=gen$(a.vol%,1)
+	print "       --- Set MCMF Defaults ---"
+	print
+	print"    (All times in 1/24ths of a second)"
+	print
+	print "Tone time: ",
+	tone%=check%:(tone$)
+	print "Delay time:",
+	delay%=check%:(delay$)
+	print "Pause time:",
+	pause%=check%:(pause$)
+	print "Tone Volume (1=Quiet, 2=Medium, 3=Loud):",
+	vol%=check%:(vol$)
+	if tone%<1
+		tone%=1
+	endif
+	if delay%<1
+		delay%=1
+	endif
+	if pause%<1
+		pause%=1
+	endif
+	if vol%<1
+		vol%=1
+	elseif vol%>3
+		vol%=3
+	endif
+	a.tone%=tone%
+	a.delay%=val(fix$(flt(delay%)/24*20,0,2))
+	a.pause%=pause%
+	a.vol%=vol%
+	update
+	close
+endif
+
+ENDP
+
+
+PROC Showerr:(e%)
+
+print err$(e%)
+print
+print "Press any key to continue..."
+get
+
+ENDP
+
+
+PROC Check%:(test$)
+
+local c%,good%,check$(2),ret%
+
+check$=test$
+do
+	edit check$
+	c%=1 :good%=0
+	if check$<>""
+		do
+			good%=loc("1234567890",mid$(check$,c%,1))
+			c%=c%+1
+		until c%>len(check$) or good%<1
+	else
+		good%=0
+	endif
+	if good%
+		ret%=val(check$)
+	else
+		beep 5,300
+		print "Please Re-enter:",
+	endif
+until good%
+return ret%
+
+ENDP
+
+
+PROC Drwscrn:
+cls
+at 1,2
+print "            --- MC-400 DTMF Dialler V1.0 ---"
+at 1,4
+if mode%
+	print "          Input No. to be dialled then <Enter>"
+else
+	print "                 Free form dialling mode"
+endif
+at 1,6
+if mode%
+	print "  (""U <Enter>"" changes defaults, ""X <Enter>"" exits)"
+	print " (""L <Enter>"" brings data, ""M <Enter>"" changes mode)"
+else
+	print "           (""U"" changes defaults, ""X"" exits)"
+	print "                   (""M"" changes mode)"
+endif
+
+ENDP
+
+
+PROC Strip$:(test$)
+
+local f%,l%,temp$(255)
+
+temp$=test$
+l%=1
+do
+	f%=loc("123A456B789C*0#D,",mid$(temp$,l%,1))
+	if f%
+		l%=l%+1
+	else
+		temp$=left$(temp$,l%-1)+right$(temp$,len(temp$)-l%)
+	endif
+until l%>len(temp$)
+
+return upper$(left$(temp$,32))
+
+ENDP
+
+
+rem The following code is based on "LPC.OPL"
+rem (Original code written by Colly Myers)
+rem (Translated into OPL by Tom Dolbilin)
+
+PROC Bring$:
+
+global srvPid%      rem PID of Link server
+global buf$(255)    rem Buffer to receive data
+global ioSem%       rem The I/O semaphore handle
+
+local wsrvPid%      rem PID of Window server
+local fmt&          rem Message buffer
+local pfmt%         rem Pointer to message buffer
+
+local name$(15),form%(3),n%,ret%,ret$(255)
+local w%(2)
+
+rem --- Get Shell's pid
+
+rem Note: on the MC, SYS$SHLL.IMG holds Link server data
+rem on the Series 3/3a SYS$WSRV.IMG holds Link Server data
+rem change name$ to "SYS$WSRV.*" for Series 3/3a
+
+name$="SYS$SHLL.*"
+wsrvPid%=call($188,addr(name$)+1)
+
+rem --- Get the handle of our I/O semaphore
+
+call($78b,0,2,0,(call($88) and $fff)+33,addr(ioSem%))
+
+rem --- Get the Link Server's pid
+
+pfmt%=addr(fmt&)
+srvPid%=call($683,wsrvPid%,4,0,addr(pfmt%)) rem MessSendReceiveWithWait
+
+if srvPid%<0
+	showerr:(srvPid%)
+	return ""
+elseif srvPid%=0
+	at 2,11
+	print "Nothing to bring"
+	pause 40
+	at 2,11
+	print "                "
+	return ""
+endif
+
+rem --- Get the name of the Link Server
+
+call($a88,srvPid%,0,0,0,addr(name$)+1)
+pokeb addr(name$),call($b9,0,0,0,0,addr(name$)+1)
+
+w%(1)=$2
+
+rem --- Request a rendering
+
+ret%=talk%:(w%(1),0)
+if ret%=0
+	rem --- Server prepared to render data
+	while 1
+		ret%=talk%:(addr(buf$)+1,255) : rem Get the server data
+		if ret%<0
+			if ret%=-36     rem End of file
+				ret%=0        rem Avoid an error print
+			endif
+			break
+		endif
+		rem --- Display the data received
+		pokeb addr(buf$),ret%
+		ret$=peek$(addr(buf$))
+	endwh
+endif
+
+if ret%<0
+	showerr:(ret%)
+endif
+
+return ret$
+
+ENDP
+
+
+PROC Talk%:(a%,b%)
+local arg1%,arg2%	        rem Message parameters - keep in order
+local stat%,count%,ret%
+arg1%=a%
+arg2%=b%
+call($0583,srvPid%,$21,0,addr(arg1%),addr(stat%)) rem MessSendReceiveAsynchronous
+while 1
+	iowait
+	if stat%<>-46 : rem The result has been returned
+		ret%=stat%
+		break
+	else
+		count%=count%+1 : rem Count up all other signals
+	endif
+endwh
+
+rem --- Put back spare signals if any
+while count%
+	iosignal
+	rem call($382,ioSem%,0,0,0,0) rem SemSignalOnce
+	count%=count%-1
+endwh
+return ret%
+ENDP

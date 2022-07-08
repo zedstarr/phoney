@@ -1,0 +1,685 @@
+APP TeleLink
+TYPE $1000
+ICON "\phoney01\phoney01.pic"
+ENDA
+
+
+PROC L:
+GLOBAL F$(128),H$(40),J$(20),K$(40)
+GLOBAL A%,B%,I$(8),L$(35),B$(10)
+GLOBAL G$(24),C$(24),D$(20),C%
+LOCAL AY%,T$(13),W$(2),AQ%,Y$(128)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+CACHE 4048,4048
+
+T$="CEDSXABNRVLUW" :I$="PHONEY01"
+H$="Network Connection:"
+J$="Status:"
+K$="Connected to:"
+L$="¸ Telecommunications Software 1996"
+
+B$="Vodanet"
+D$="0100000000"
+C%=$007f
+IF NOT EXIST ("\opd\"+I$+".def")
+	CREATE I$+".def",a,B$,D$,C%
+	a.B$=B$
+	a.D$=D$
+	a.C%=C%
+	APPEND
+	CLOSE
+	D:
+ELSE
+	TRAP OPENR I$+".def",a,B$,D$,C%
+	IF ERR
+		RAISE ERR
+	ELSE
+		B$=a.B$
+		D$=a.D$
+	ENDIF
+	TRAP CLOSE
+ENDIF
+
+DEFAULTWIN 1
+STATUSWIN ON :FONT -$3fff,0
+GBORDER 0
+
+A%=GWIDTH :B%=GHEIGHT  
+
+GIPRINT L$
+
+PAUSE 50
+
+GIPRINT "Drivers loaded"
+
+PAUSE 10
+
+BUSY "Initialising..."
+
+
+
+AQ%=0
+F$="\SND\PHONEY01.WVE"
+Y$=F$
+DO
+	IF NOT EXIST("M:"+Y$)
+		IF NOT EXIST("A:"+Y$)
+			IF NOT EXIST("B:"+Y$)
+				F$="M:"+Y$
+			ELSE
+				F$="B:"+Y$
+				AQ%=2
+			ENDIF
+		ELSE
+			F$="A:"+Y$
+			AQ%=2
+		ENDIF
+	ELSE
+		F$="M:"+Y$
+		AQ%=2
+	ENDIF
+	Y$="\WVE\PHONEY01.WVE"
+	AQ%=AQ%+1
+UNTIL AQ%>1
+
+GAT 2,20
+GPRINTB H$,A%-4,3
+GAT 2,40
+GPRINTB J$,A%-4,3
+
+PAUSE 50
+
+E:
+
+BUSY OFF
+
+PAUSE 20
+
+DO
+	AY%=B%:
+	IF AY%=$122
+		MINIT
+		MCARD "Connect","New call",%c,"End call",%e
+		MCARD "Call divert","Divert on busy",%b,"Divert on no answer",%n,"Divert if not reachable",%r,"Cancel all diverts",%u
+		MCARD "Do not disturb","Divert all calls",%a,"Divert all calls to voicemail",%v,"Silent alert",%l
+		MCARD "Messages","Read messages",%R,"Write messages",%W
+		MCARD "Setup","Dialling defaults",%d
+		MCARD "Special","Status",%s,"Exit",%x
+		LOCK ON
+		AY%=MENU AND $ffdf
+		LOCK OFF
+		IF AY% AND AY%<>%X
+			W$="C"+CHR$(AY%)
+			@(W$):
+		ENDIF
+	ELSEIF AY% AND $200
+		AY%=(AY%-$200) AND $ffdf
+		AY%=LOC(T$,CHR$(AY%))
+		IF AY%
+			IF AY%=5
+				AY%=%X
+			ELSE
+				W$="C"+MID$(T$,AY%,1)
+				@(W$):
+			ENDIF
+		ENDIF
+	ELSEIF AY%=27
+		DINIT "Quit TeleLink?"
+		DBUTTONS "No",-%N,"Yes",%Y
+		LOCK ON
+		AY%=DIALOG AND $ffdf
+		IF AY%=%Y
+			AY%=%X
+		ENDIF
+		LOCK OFF
+	ELSEIF AY%=291
+		IF NOT EXIST (LEFT$(CMD$(1),LEN(CMD$(1))-3)+"hlp")
+			GIPRINT "No help available"
+		ELSE
+			K:
+		ENDIF
+	ENDIF
+UNTIL AY%=%X
+BUSY "Disconnecting..."
+A:
+GAT 2,20
+GPRINTB H$+"  Logging off...",A%-4,3
+PAUSE 40
+B:
+GIPRINT "Logged off"
+PAUSE 10
+ENDP
+
+
+PROC B%:
+LOCAL AW%(6),S$(1),X$(128)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+DO
+	GETEVENT AW%()
+	IF AW%(1)=$404
+		X$=GETCMD$
+		S$=LEFT$(X$,1)
+		X$=MID$(X$,2,128)
+		IF S$="X"
+			AW%(1)=%X
+		ENDIF
+	ENDIF
+UNTIL NOT (AW%(1) AND $400)
+RETURN AW%(1)
+ENDP
+
+
+PROC D:
+LOCAL P$(10)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+TRAP OPEN I$+".def",a,B$,D$,C%
+IF ERR
+	RAISE ERR
+ELSE
+	P$=B$
+	DINIT "Set Telecoms Defaults"
+	DEDIT B$,"Network name:",15
+	DEDIT D$,"Mobile terminal number:",15
+	LOCK ON
+	IF DIALOG
+		a.B$=B$
+		a.D$=D$
+		UPDATE
+		CLOSE
+		IF P$<>B$ AND A%
+			E:
+		ENDIF
+	ENDIF
+	LOCK OFF
+ENDIF
+
+ENDP
+
+
+PROC E:
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+A:
+
+GAT 2,20
+GPRINTB H$+"  Logging on...",A%-4,3
+
+PAUSE 50
+
+GIPRINT "Logged on to "+CHR$(34)+B$+CHR$(34)+" network"
+GAT 2,20
+GPRINTB H$+"  Established ("+B$+")",A%-4,3
+
+B:
+
+ENDP
+
+
+PROC A:
+LOCAL Z$(128)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+Z$=J$+"  Off Hook"
+IF C$<>""
+	Z$=Z$+" (Divert all calls to: "+C$+")"
+ENDIF
+F:(4)
+GAT 2,40
+GPRINTB Z$,A%-4,3
+ENDP
+
+
+PROC B:
+LOCAL Z$(128)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+Z$=J$+"  On Hook"
+IF C$ <>""
+	Z$=Z$+" (Divert all calls to: "+C$+")"
+ENDIF
+GAT 2,40
+GPRINTB Z$,A%-4,3
+GAT 2,60
+GPRINTB REPT$(" ",70),A%-4,3
+F:(2)
+ENDP
+
+
+PROC A$:(N$)
+
+LOCAL AD%,AV%,E$(24)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+E$=N$
+AV%=1
+DO
+	AD%=LOC("123A456B789C*0#D,",MID$(E$,AV%,1))
+	IF AD%
+		AV%=AV%+1
+	ELSE
+		E$=LEFT$(E$,AV%-1)+RIGHT$(E$,LEN(E$)-AV%)
+	ENDIF
+UNTIL AV%>LEN(E$)
+
+RETURN UPPER$(LEFT$(E$,32))
+
+ENDP
+
+
+PROC CC:
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+DINIT "Call Setup"
+DEDIT G$,"Number to dial:",15
+LOCK ON
+IF DIALOG
+
+	G$=A$:(G$)
+	IF G$<>""
+		BUSY "Dialling..."
+		A:
+		GAT 2,60
+		GPRINTB "Dialling:"+"  "+G$,A%-4,3
+		C:(450,0,0,0,128,0,0,0,350,0,0,0,128,0,0,0,1,1,1)
+		G:(G$)
+		BUSY OFF
+
+		PAUSE 20
+
+		IF EXIST(F$)
+			GIPRINT "Connected"
+			GAT 2,60
+			GPRINTB K$+"  "+G$,A%-4,3
+			C:(450,0,450,0,26,12,26,128,400,0,400,0,26,12,26,128,3,12,12)
+			GAT 2,60
+			GPRINTB K$+"  "+G$+" (Answered at "+RIGHT$("0"+GEN$(HOUR,2),2)+":"+RIGHT$("0"+GEN$(MINUTE,2),2)+":"+RIGHT$("0"+GEN$(SECOND,2),2)+")",A%-4,3
+			GIPRINT "Call Answered"
+			I:(F$)
+			GIPRINT "Clearing down"
+		ELSE
+			GIPRINT "Number busy"
+			C:(400,0,400,0,24,24,24,24,400,0,400,0,24,24,24,24,2,8,8)
+		ENDIF
+		B:
+	ELSE
+		GIPRINT "No numbers to dial"
+	ENDIF
+	PAUSE 20
+ENDIF
+LOCK OFF
+ENDP
+
+
+PROC CE:
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+ENDP
+
+
+PROC CS:
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+DINIT "TeleLink v2.01F"
+DTEXT "Home network:",B$,0
+DTEXT "Own Number:",D$,0
+IF C$<>""
+	DTEXT "Divert all calls to:",C$,0
+ENDIF
+DTEXT "Network connection:","OK",0
+DTEXT "Protocol layer:","ANSI V0.23.s",0
+LOCK ON
+DIALOG
+LOCK OFF
+ENDP
+
+
+PROC CD:
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+D:
+ENDP
+
+
+PROC CA:
+LOCAL E$(24)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+DINIT "Divert all calls"
+DEDIT C$,"Divert to:",15
+LOCK ON
+IF DIALOG
+
+	C$=A$:(C$)
+	IF C$<>""
+		BUSY "Setting diversion..."
+		E$=C$
+		C$=""
+		A:
+		C$=E$
+		GAT 2,60
+		GPRINTB "Sending:"+"  *21*"+C$+"#",A%-4,3
+		PAUSE 50
+		B:
+		GIPRINT "Done"
+		BUSY OFF
+	ELSE
+		GIPRINT "No number to divert to"
+	ENDIF
+ENDIF
+LOCK OFF
+ENDP
+
+
+PROC CU:
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+BUSY "Cancelling diversion..."
+A:
+GAT 2,60
+GPRINTB "Sending:"+"  #21#",A%-4,3
+C$=""
+PAUSE 50
+B:
+BUSY OFF
+GIPRINT "Done"
+LOCK OFF
+ENDP
+
+
+PROC CN:
+GIPRINT "Service not available"
+ENDP
+
+
+PROC CB:
+GIPRINT "Service not available"
+ENDP
+
+
+PROC CR:
+GIPRINT "Service not available"
+ENDP
+
+PROC CW:
+GIPRINT "Service not available"
+ENDP
+
+PROC CV:
+GIPRINT "Service not available"
+ENDP
+
+
+PROC CL:
+GIPRINT "Service not available"
+ENDP
+
+
+PROC C:(X%,V%,W%,Y%,AB%,AC%,Z%,AA%,U%,L%,K%,N%,M%,H%,G%,J%,I%,P%,O%)
+LOCAL AK%,B%,AX%
+LOCAL AT%(24),AS%(24)
+LOCAL AG%,AF%,AE%
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+AX%=0
+AK%=IOOPEN(B%,"SND:",-1)
+IF AK%<0
+	RAISE AK%
+ELSE
+	DO
+		AT%(AX%*8+1)=X% :AT%(AX%*8+2)=AB%
+		AT%(AX%*8+3)=V% :AT%(AX%*8+4)=AC%
+		AT%(AX%*8+5)=W% :AT%(AX%*8+6)=Z%
+		AT%(AX%*8+7)=Y% :AT%(AX%*8+8)=AA%
+		AS%(AX%*8+1)=U% :AS%(AX%*8+2)=M%
+		AS%(AX%*8+3)=L% :AS%(AX%*8+4)=H%
+		AS%(AX%*8+5)=K% :AS%(AX%*8+6)=G%
+		AS%(AX%*8+7)=N% :AS%(AX%*8+8)=J%
+		AX%=AX%+1
+	UNTIL AX%=I%
+	AF%=P% :AE%=O%
+	IOC(B%,1,AG%,AT%(),AF%)
+	IOW(B%,2,AS%(),AE%)
+	IOWAITSTAT AG%
+	IOCLOSE(B%)
+ENDIF
+ENDP
+
+
+PROC G:(M$)
+LOCAL B%,C&,B&,A&,W$(24),O$(25),F%,AU%,AW%(2),AL%
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+AU%=IOOPEN(B%,"SND:",0)
+IF AU%<0
+	RAISE AU%
+ELSE
+	C&=4
+	B&=2
+	A&=32
+	AW%(1)=C&+(256*B&)
+	AW%(2)=A&
+	O$=M$+CHR$(0)
+	AL%=5*256+120
+	AU%=IOW(B%,7,AL%,#0)
+	IF AU%<0
+		RAISE AU%
+	ENDIF
+	AU%=IOW(B%,10,#UADD(ADDR(O$),1),AW%())
+	IF AU%<0
+		RAISE AU%
+	ENDIF
+	AU%=IOCLOSE(B%)
+	IF AU%<0
+		RAISE AU%
+	ENDIF
+ENDIF
+ENDP
+
+
+PROC I:(X$)
+LOCAL AO%,AH%,T%(4),AM%,AK%,AN%
+LOCAL Q$(128)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+Q$=X$
+AM%=0
+J:(ADDR(AO%),Q$,AM%,0)
+IOC(-2,1,AH%,T%())
+WHILE 1
+	IOWAIT
+	IF AO%<>-46
+		IOCANCEL(-2)
+		IOWAITSTAT AH%
+		IF AO%<0
+			GIPRINT "Error Playing: "+ERR$(AO%)
+		ENDIF
+		BREAK
+	ELSEIF AH%<>-46
+		H:
+		IOWAITSTAT AO%
+		GIPRINT "Cancelled"
+		BREAK
+	ELSE
+		AN%=AN%+1
+	ENDIF
+ENDWH
+WHILE AN%
+	IOSIGNAL
+	AN%=AN%-1
+ENDWH
+ENDP
+
+
+PROC J:(S%,V$,AM%,AL%)
+LOCAL R$(128)
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+R$=V$+CHR$(0)
+CALL($1e86,UADD(ADDR(R$),1),AM%,AL%,0,S%)
+ENDP
+
+
+PROC H:
+CALL($2086)
+ENDP
+
+
+PROC A%:(Q%)
+LOCAL AP%,D%,E%
+LOCAL U$(128),AR%(100)
+LOCAL B%,AV%,AI%
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+U$=CMD$(1)
+AV%=IOOPEN(B%,U$,$400)
+
+IF AV% 
+	GOTO A:: 
+ENDIF
+
+AV%=IOREAD(B%,ADDR(AR%(1)),200)
+
+IF AV%<=140 
+	GOTO B:: 
+ENDIF
+
+IF AR%(1)<>%O+(%P*256)
+	GOTO B::
+ENDIF
+
+IF AR%(2)<>%L+(%O*256)
+	GOTO B::
+ENDIF
+
+AI%=23+(AR%(11) AND $ff)
+AV%=PEEKW(ADDR(AR%(1))+AI%)
+
+IF AV%<>%P+(%I*256)
+	GOTO B::
+ENDIF
+
+IF AV%=0 
+	GOTO B:: 
+ENDIF
+
+CALL($5f8d,1,AI%,0,0,0)
+
+B::
+IOCLOSE(B%)
+A::
+
+AP%=GLOADBIT(U$,0,Q%)
+RETURN AP%
+ENDP
+
+
+PROC F:(R%)
+LOCAL AW%,AP%
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+AP%=R%
+GUSE 1
+GAT (A%-48)/2,80
+GGREY 0
+GFILL 48,48,1
+GGREY 1
+GFILL 48,48,1
+GUSE 1 :GGREY 0
+AW%=A%:(AP%)
+GUSE 1 :GGREY 0
+GAT (A%-48)/2,80 :GCOPY AW%,0,0,48,48,0
+GCLOSE AW%
+GUSE 1 :GGREY 1
+AW%=A%:(AP%+1)
+GUSE 1 :GGREY 1
+GAT (A%-48)/2,80 :GCOPY AW%,0,0,48,48,0
+GCLOSE AW%
+GGREY 0
+ENDP
+
+
+PROC K:
+LOCAL AJ%,AR%(65),V$(130)
+LOCAL E&,D&
+LOCAL A$(3)
+
+GOTO C::
+A$="WQR"
+C::
+
+E&=1 :D&=1
+V$=LEFT$(CMD$(1),LEN(CMD$(1))-3)+"hlp"
+
+POKE$ ADDR(AR%(1)),"#"+V$
+
+AJ%=PEEKW($38)
+SEND(AJ%,27,AR%(2)) :
+SEND(AJ%,26,#E&,#D&) :
+ENDP
+

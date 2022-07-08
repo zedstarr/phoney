@@ -1,0 +1,31 @@
+
+The resource compiler in this archive can be used to produce
+help files for e.g. OPL applications. For further information
+on using Help files from OPL refer to the archive Helpkit1.zip
+in psion\files on CIX.
+
+To try out the example, type:
+
+    rcomp example.rss
+
+- and view the resulting example.rsc file with your normal help viewer
+(such as Helpshow.opl in Helpkit1.zip)
+
+Performing the above operation will also generate a header (example.rsg)
+which contains the resource numbers of the various help pages. 
+
+If you are using a PC based development environment such
+as ODE, then you can #include this header directly. 
+
+The information in the generated header file will
+allow your application to display context sensitive help. 
+
+For further information on the use of resource files, please refer
+to the documentation in the Four Volume Psion SDK.
+
+These notes by Jezar
+Psion Software Development,
+August 1995.
+
+
+

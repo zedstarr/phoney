@@ -1,0 +1,685 @@
+APP TeleLink
+TYPE $1000
+ICON "\phoney01\phoney01.pic"
+ENDA
+
+
+PROC Main:
+Global msg$(128),stat1$(40),stat2$(20),stat3$(40)
+Global w%,h%,prgnm$(8),conm$(35),ntnm$(10)
+Global dn$(24),divn$(24),mtn$(20),prot%
+local k%,h$(13),a$(2),cnt%,tst$(128)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+cache 4048,4048
+
+h$="CEDSXABNRVLUW" :prgnm$="PHONEY01"
+stat1$="Network Connection:"
+stat2$="Status:"
+stat3$="Connected to:"
+conm$="¸ Telecommunications Software 1996"
+
+ntnm$="Vodanet"
+mtn$="0100000000"
+prot%=$007f
+if not exist ("\opd\"+prgnm$+".def")
+	create prgnm$+".def",a,ntnm$,mtn$,prot%
+	a.ntnm$=ntnm$
+	a.mtn$=mtn$
+	a.prot%=prot%
+	append
+	close
+	updte:
+else
+	trap openr prgnm$+".def",a,ntnm$,mtn$,prot%
+	if err
+		raise err
+	else
+		ntnm$=a.ntnm$
+		mtn$=a.mtn$
+	endif
+	trap close
+endif
+
+defaultwin 1
+statuswin on :font -$3fff,0
+gborder 0
+
+w%=gwidth :h%=gheight  rem 416 x 160
+
+giprint conm$
+
+pause 50
+
+giprint "Drivers loaded"
+
+pause 10
+
+Busy "Initialising..."
+
+rem Find sound files
+
+cnt%=0
+msg$="\SND\PHONEY01.WVE"
+tst$=msg$
+do
+	if not exist("M:"+tst$)
+		if not exist("A:"+tst$)
+			if not exist("B:"+tst$)
+				msg$="M:"+tst$
+			else
+				msg$="B:"+tst$
+				cnt%=2
+			endif
+		else
+			msg$="A:"+tst$
+			cnt%=2
+		endif
+	else
+		msg$="M:"+tst$
+		cnt%=2
+	endif
+	tst$="\WVE\PHONEY01.WVE"
+	cnt%=cnt%+1
+until cnt%>1
+
+gat 2,20
+gprintb stat1$,w%-4,3
+gat 2,40
+gprintb stat2$,w%-4,3
+
+pause 50
+
+Logon:
+
+Busy off
+
+pause 20
+
+do
+	k%=gk%:
+	if k%=$122
+		minit
+		mcard "Connect","New call",%c,"End call",%e
+		mcard "Call divert","Divert on busy",%b,"Divert on no answer",%n,"Divert if not reachable",%r,"Cancel all diverts",%u
+		mcard "Do not disturb","Divert all calls",%a,"Divert all calls to voicemail",%v,"Silent alert",%l
+		mcard "Messages","Read messages",%R,"Write messages",%W
+		mcard "Setup","Dialling defaults",%d
+		mcard "Special","Status",%s,"Exit",%x
+		lock on
+		k%=menu and $ffdf
+		lock off
+		if k% and k%<>%X
+			a$="C"+chr$(k%)
+			@(a$):
+		endif
+	elseif k% and $200
+		k%=(k%-$200) and $ffdf
+		k%=loc(h$,chr$(k%))
+		if k%
+			if k%=5
+				k%=%X
+			else
+				a$="C"+mid$(h$,k%,1)
+				@(a$):
+			endif
+		endif
+	elseif k%=27
+		dinit "Quit TeleLink?"
+		dbuttons "No",-%N,"Yes",%Y
+		lock on
+		k%=dialog and $ffdf
+		if k%=%Y
+			k%=%X
+		endif
+		lock off
+	elseif k%=291
+		if not exist (left$(cmd$(1),len(cmd$(1))-3)+"hlp")
+			giprint "No help available"
+		else
+			Help:
+		endif
+	endif
+until k%=%X
+Busy "Disconnecting..."
+Offhook:
+gat 2,20
+gprintb stat1$+"  Logging off...",w%-4,3
+pause 40
+Onhook:
+giprint "Logged off"
+pause 10
+ENDP
+
+
+PROC gk%:
+local a%(6),t$(1),w$(128)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+do
+	getevent a%()
+	if a%(1)=$404
+		w$=getcmd$
+		t$=left$(w$,1)
+		w$=mid$(w$,2,128)
+		if t$="X"
+			a%(1)=%X
+		endif
+	endif
+until not (a%(1) and $400)
+return a%(1)
+ENDP
+
+
+PROC Updte:
+local tmp$(10)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+trap open prgnm$+".def",a,ntnm$,mtn$,prot%
+if err
+	raise err
+else
+	tmp$=ntnm$
+	dinit "Set Telecoms Defaults"
+	dedit ntnm$,"Network name:",15
+	dedit mtn$,"Mobile terminal number:",15
+	lock on
+	if dialog
+		a.ntnm$=ntnm$
+		a.mtn$=mtn$
+		update
+		close
+		if tmp$<>ntnm$ and w%
+			logon:
+		endif
+	endif
+	lock off
+endif
+
+ENDP
+
+
+PROC Logon:
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+Offhook:
+
+gat 2,20
+gprintb stat1$+"  Logging on...",w%-4,3
+
+pause 50
+
+giprint "Logged on to "+chr$(34)+ntnm$+chr$(34)+" network"
+gat 2,20
+gprintb stat1$+"  Established ("+ntnm$+")",w%-4,3
+
+Onhook:
+
+ENDP
+
+
+PROC Offhook:
+local st$(128)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+st$=stat2$+"  Off Hook"
+if divn$<>""
+	st$=st$+" (Divert all calls to: "+divn$+")"
+endif
+Icn:(4)
+gat 2,40
+gprintb st$,w%-4,3
+ENDP
+
+
+PROC Onhook:
+local st$(128)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+st$=stat2$+"  On Hook"
+if divn$ <>""
+	st$=st$+" (Divert all calls to: "+divn$+")"
+endif
+gat 2,40
+gprintb st$,w%-4,3
+gat 2,60
+gprintb REPT$(" ",70),w%-4,3
+Icn:(2)
+ENDP
+
+
+PROC Strip$:(test$)
+
+local f%,l%,temp$(24)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+temp$=test$
+l%=1
+do
+	f%=loc("123A456B789C*0#D,",mid$(temp$,l%,1))
+	if f%
+		l%=l%+1
+	else
+		temp$=left$(temp$,l%-1)+right$(temp$,len(temp$)-l%)
+	endif
+until l%>len(temp$)
+
+return upper$(left$(temp$,32))
+
+ENDP
+
+
+PROC CC:
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+dinit "Call Setup"
+dedit dn$,"Number to dial:",15
+lock on
+if dialog
+
+	dn$=strip$:(dn$)
+	if dn$<>""
+		Busy "Dialling..."
+		Offhook:
+		gat 2,60
+		gprintb "Dialling:"+"  "+dn$,w%-4,3
+		Sound:(450,0,0,0,128,0,0,0,350,0,0,0,128,0,0,0,1,1,1)
+		MF:(dn$)
+		Busy off
+
+		pause 20
+
+		if exist(msg$)
+			giprint "Connected"
+			gat 2,60
+			gprintb stat3$+"  "+dn$,w%-4,3
+			Sound:(450,0,450,0,26,12,26,128,400,0,400,0,26,12,26,128,3,12,12)
+			gat 2,60
+			gprintb stat3$+"  "+dn$+" (Answered at "+right$("0"+gen$(hour,2),2)+":"+right$("0"+gen$(minute,2),2)+":"+right$("0"+gen$(second,2),2)+")",w%-4,3
+			giprint "Call Answered"
+			Play:(msg$)
+			giprint "Clearing down"
+		else
+			giprint "Number busy"
+			Sound:(400,0,400,0,24,24,24,24,400,0,400,0,24,24,24,24,2,8,8)
+		endif
+		Onhook:
+	else
+		giprint "No numbers to dial"
+	endif
+	pause 20
+endif
+lock off
+ENDP
+
+
+PROC CE:
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+ENDP
+
+
+PROC CS:
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+dinit "TeleLink v2.01F"
+dtext "Home network:",ntnm$,0
+dtext "Own Number:",mtn$,0
+if divn$<>""
+	dtext "Divert all calls to:",divn$,0
+endif
+dtext "Network connection:","OK",0
+dtext "Protocol layer:","ANSI V0.23.s",0
+lock on
+dialog
+lock off
+ENDP
+
+
+PROC CD:
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+updte:
+ENDP
+
+
+PROC CA:
+local temp$(24)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+dinit "Divert all calls"
+dedit divn$,"Divert to:",15
+lock on
+if dialog
+
+	divn$=strip$:(divn$)
+	if divn$<>""
+		Busy "Setting diversion..."
+		temp$=divn$
+		divn$=""
+		Offhook:
+		divn$=temp$
+		gat 2,60
+		gprintb "Sending:"+"  *21*"+divn$+"#",w%-4,3
+		pause 50
+		Onhook:
+		giprint "Done"
+		Busy off
+	else
+		giprint "No number to divert to"
+	endif
+endif
+lock off
+ENDP
+
+
+PROC CU:
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+Busy "Cancelling diversion..."
+Offhook:
+gat 2,60
+gprintb "Sending:"+"  #21#",w%-4,3
+divn$=""
+pause 50
+Onhook:
+Busy off
+giprint "Done"
+lock off
+ENDP
+
+
+PROC CN:
+giprint "Service not available"
+ENDP
+
+
+PROC CB:
+giprint "Service not available"
+ENDP
+
+
+PROC CR:
+giprint "Service not available"
+ENDP
+
+PROC CW:
+giprint "Service not available"
+ENDP
+
+PROC CV:
+giprint "Service not available"
+ENDP
+
+
+PROC CL:
+giprint "Service not available"
+ENDP
+
+
+PROC Sound:(v1f1%,v1f2%,v1f3%,v1f4%,v1t1%,v1t2%,v1t3%,v1t4%,v2f1%,v2f2%,v2f3%,v2f4%,v2t1%,v2t2%,v2t3%,v2t4%,n%,ln1%,ln2%)
+local ret%,h%,count%
+local notes1%(24),notes2%(24)
+local s1stat%,len1%,len2%
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+count%=0
+ret%=ioopen(h%,"SND:",-1)
+if ret%<0
+	raise ret%
+else
+	do
+		notes1%(count%*8+1)=v1f1% :notes1%(count%*8+2)=v1t1%
+		notes1%(count%*8+3)=v1f2% :notes1%(count%*8+4)=v1t2%
+		notes1%(count%*8+5)=v1f3% :notes1%(count%*8+6)=v1t3%
+		notes1%(count%*8+7)=v1f4% :notes1%(count%*8+8)=v1t4%
+		notes2%(count%*8+1)=v2f1% :notes2%(count%*8+2)=v2t1%
+		notes2%(count%*8+3)=v2f2% :notes2%(count%*8+4)=v2t2%
+		notes2%(count%*8+5)=v2f3% :notes2%(count%*8+6)=v2t3%
+		notes2%(count%*8+7)=v2f4% :notes2%(count%*8+8)=v2t4%
+		count%=count%+1
+	until count%=n%
+	len1%=ln1% :len2%=ln2%
+	ioc(h%,1,s1stat%,notes1%(),len1%)
+	iow(h%,2,notes2%(),len2%)
+	iowaitstat s1stat%
+	ioclose(h%)
+endif
+ENDP
+
+
+PROC MF:(digits$)
+local h%,length&,delay&,pause&,a$(24),b$(25),z%,r%,a%(2),vol%
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+r%=ioopen(h%,"SND:",0)
+if r%<0
+	raise r%
+else
+	length&=4
+	delay&=2
+	pause&=32
+	a%(1)=length&+(256*delay&)
+	a%(2)=pause&
+	b$=digits$+chr$(0)
+	vol%=5*256+120
+	r%=iow(h%,7,vol%,#0)
+	if r%<0
+		raise r%
+	endif
+	r%=iow(h%,10,#uadd(addr(b$),1),a%())
+	if r%<0
+		raise r%
+	endif
+	r%=ioclose(h%)
+	if r%<0
+		raise r%
+	endif
+endif
+ENDP
+
+
+PROC Play:(w$)
+local sstat%,kstat%,key%(4),ticks%,ret%,signals%
+local file$(128)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+file$=w$
+ticks%=0
+playa:(addr(sstat%),file$,ticks%,0)
+ioc(-2,1,kstat%,key%())
+while 1
+	iowait
+	if sstat%<>-46
+		iocancel(-2)
+		iowaitstat kstat%
+		if sstat%<0
+			giprint "Error Playing: "+err$(sstat%)
+		endif
+		break
+	elseif kstat%<>-46
+		playc:
+		iowaitstat sstat%
+		giprint "Cancelled"
+		break
+	else
+		signals%=signals%+1
+	endif
+endwh
+while signals%
+	iosignal
+	signals%=signals%-1
+endwh
+ENDP
+
+
+PROC Playa:(pstat%,fname$,ticks%,vol%)
+local name$(128)
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+name$=fname$+chr$(0)
+call($1e86,uadd(addr(name$),1),ticks%,vol%,0,pstat%)
+ENDP
+
+
+PROC Playc:
+call($2086)
+ENDP
+
+
+PROC LoadPic%:(im%)
+LOCAL id%,wi%,ht%
+LOCAL f$(128),buf%(100)
+LOCAL h%,l%,o%
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+f$=CMD$(1)
+l%=IOOPEN(h%,f$,$400)
+
+IF l% 
+	GOTO error2 
+ENDIF
+
+l%=IOREAD(h%,ADDR(buf%(1)),200)
+
+IF l%<=140 
+	GOTO error 
+ENDIF
+
+IF buf%(1)<>%O+(%P*256)
+	GOTO error
+ENDIF
+
+IF buf%(2)<>%L+(%O*256)
+	GOTO error
+ENDIF
+
+o%=23+(buf%(11) and $ff)
+l%=PEEKW(ADDR(buf%(1))+o%)
+
+IF l%<>%P+(%I*256)
+	GOTO error
+ENDIF
+
+IF l%=0 
+	GOTO error 
+ENDIF
+
+CALL($5f8d,1,o%,0,0,0)
+
+error::
+IOCLOSE(h%)
+error2::
+
+id%=gLoadBit(f$,0,im%)
+RETURN id%
+ENDP
+
+
+PROC Icn:(i%)
+local a%,id%
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+id%=i%
+guse 1
+gat (w%-48)/2,80
+ggrey 0
+gfill 48,48,1
+ggrey 1
+gfill 48,48,1
+guse 1 :ggrey 0
+a%=loadpic%:(id%)
+guse 1 :ggrey 0
+gat (w%-48)/2,80 :gcopy a%,0,0,48,48,0
+gclose a%
+guse 1 :ggrey 1
+a%=loadpic%:(id%+1)
+guse 1 :ggrey 1
+gat (w%-48)/2,80 :gcopy a%,0,0,48,48,0
+gclose a%
+ggrey 0
+ENDP
+
+
+PROC Help:
+LOCAL gate%,buf%(65),fname$(130)
+LOCAL page&,base&
+local prot$(3)
+
+goto skip::
+prot$="WQR"
+skip::
+
+page&=1 :base&=1
+fname$=left$(cmd$(1),len(cmd$(1))-3)+"hlp"
+REM Convert filename to "C" string:
+POKE$ ADDR(buf%(1)),"#"+fname$
+
+gate%=PEEKW($38)
+SEND(gate%,27,buf%(2)) :REM Set help filename
+SEND(gate%,26,#page&,#base&) :REM Do help
+ENDP
+

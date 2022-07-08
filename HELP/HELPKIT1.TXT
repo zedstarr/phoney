@@ -1,0 +1,95 @@
+Helpkit1.ZIP information
+========================
+
+Written by Jezar at Psion
+
+You have a royalty free right to use
+and distribute this software in any
+way you see fit, provided that you
+agree that neither Psion nor Jezar will
+be held liable for the consequences of
+you doing so.
+
+This kit is comprised of the following
+files:
+
+Helpcomp.opl - The help compiler.
+Helpshow.opl - Example of using help.
+Helpxmpl.hlp - Sample help source.
+Helptext.txt - This file.
+Help.als     - Just a word alias.
+
+The help compiler will run on a Series
+3 and a Series 3a. However, at present
+you can only use the inbuilt help
+system on a 3a. I may write some code
+to use the inbuilt help on the Series
+3 Classic if time permits. Until then,
+please DO NOT attempt to modify 
+Helpshow.opl to run on the Classic, as
+the program will abort immediately
+with exit code 48
+
+History
+=======
+A brief investigation of the internals
+of the Series 3a code revealed that a
+mechanism for using the inbuilt help
+system was already in place. All that
+was required was for someone to
+document it. So here we go...
+
+You only need to do two things:
+1) Set the help filename
+2) Start the help, with the help topic
+   resource number, and the number of
+   the initial help screen to show.
+   
+Obviously, from the above description
+you can see that you can perform 
+context-sensitive help, by choosing
+which help page to show initially.
+
+Interestingly, there is NO NEED to use
+LOCK ON and LOCK OFF while calling the
+inbuilt help system, as it does it for
+you automatically.
+
+The help compiler
+=================
+This takes a plain text file, and 
+compiles it into a genuine Psion ".rsc"
+file. The resource file writer engine
+is designed to be re-usable and can
+write any type of resource to a file.
+
+The source file format used, is the
+Tom Dolbilin standard. This was chosen
+partly because it is a nice, easy to
+understand format, and also because
+there may be many people already using
+this standard. The format should be
+clear from the sample one supplied, but
+basically:
+	1) The first line is the help title
+	2) The second line (optional) is the
+	   path and/or filename of the
+	   compiled help.
+	3) Then topics and text are listed,
+	   bracketed by #begin/#end keywords.
+	4) A hash (#) followed by THREE
+	   digits becomes a single character.
+
+Note that if you prefer PC development,
+you can use the Psion resource
+compiler on a normal .rss file, and
+use the constants generated to launch
+the help system.
+
+I hope you find this code useful.
+
+Best wishes,
+jezar@cix.compulink.co.uk
+
+End of file - Helpkit1.txt
+

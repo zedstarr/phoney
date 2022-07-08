@@ -1,0 +1,21 @@
+PROC Help%:
+	LOCAL gate%,buf%(65),fname$(130)
+	LOCAL page&,base&
+	
+	page&=1 :base&=1 :fname$="\opd\*.rsc"
+	dINIT "Help file to show"
+	dFILE fname$,"File:",0
+	dLONG base&,"Topic resource",1,255
+	dLONG page&,"Initial page",1,255
+	IF DIALOG=0
+		RETURN
+	ENDIF
+	
+	REM Convert filename to "C" string:
+	POKE$ ADDR(buf%(1)),"#"+fname$
+	
+	gate%=PEEKW($38)
+	SEND(gate%,27,buf%(2)) :REM Set help filename
+	SEND(gate%,26,#page&,#base&) :REM Do help
+ENDP
+

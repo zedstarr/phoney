@@ -1,0 +1,80 @@
+/*
+Example help file by Jezar.
+*/
+
+#include "symbols.h"
+#include "help.rh"
+
+GLOBAL RESOURCE HELP_ARRAY compiler_help
+{
+topic="Psion resource compiler";
+topic_id=compiler_help_index;
+}
+
+GLOBAL RESOURCE TOPIC_ARRAY compiler_help_index
+{
+id_lst=
+{
+compiler_basics,   /* Matches name of your HELP_ARRAY */
+-SYS_HELP_EVALUATE, /* Example of referencing other "System" help screens */
+bogus_help,
+-SYS_HELP_EDIT,
+cross_referencing
+};
+}
+
+GLOBAL RESOURCE TOPIC_ARRAY xref_index
+{  /* An example cross-reference index for the bottom of one of our pages */
+id_lst=
+{
+cross_referencing,
+bogus_help
+};
+}
+
+GLOBAL RESOURCE HELP_ARRAY compiler_basics
+{
+topic="Psion resource compiler";
+strlst=
+{
+STRING {str="The resource compiler in this archive is used to";},
+STRING {str="compile all Psion resources. However, I only have";},
+STRING {str="time in this archive to demonstrate its use for";},
+STRING {str="producing help files for e.g. OPL applications.";},
+STRING {str="(as requested by people on CIX)";},
+STRING {str="";},
+STRING {str="For further use of the resource compiler, please";},
+STRING {str="refer to the Psion SDK";},
+STRING {str="";},
+STRING {str="Note that you can use the symbols defined in symbols.h";},
+STRING {str="Such as "<WS_SYMBOL_LEFT_KEY><WS_SYMBOL_RIGHT_KEY><WS_SYMBOL_UP_KEY><WS_SYMBOL_DOWN_KEY>" - and they should appear as expected.";},
+STRING {str="";},
+STRING {str="See also:";}
+};
+topic_id=xref_index;        /* List of related topics */
+}
+
+GLOBAL RESOURCE HELP_ARRAY cross_referencing
+{
+topic="Cross-referenced subjects";
+strlst=
+{
+STRING {str="Using this resource compiler";},
+STRING {str="you can write help items that";},
+STRING {str="make references to other help pages.";},
+STRING {str="";},
+STRING {str="My OPL based help compiler could be easilly";},
+STRING {str="modified to do this too, but I don't have";},
+STRING {str="the time to do it.";}
+};
+}
+
+GLOBAL RESOURCE HELP_ARRAY bogus_help
+{
+topic="Bogus item";
+strlst=
+{
+STRING {str="I ran out of things to say";},
+STRING {str="when I wrote this help item.";}
+};
+}

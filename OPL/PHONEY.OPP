@@ -1,0 +1,497 @@
+APP TeleLink
+TYPE $1000
+ICON "\opl\phoney.pic"
+ENDA
+
+
+PROC T:
+
+GLOBAL F$(128),D$(40),C$(20),G$(40)
+GLOBAL B%,A%,B$(24),I$(8),H$(35),E$(8)
+GLOBAL A$(24)
+LOCAL Z%,P$(12),S$(2)
+
+P$="CEDSXABNRVLU" :I$="PHONEY01"
+F$="\SND\MESSAGE.WVE"
+D$="Network Connection:"
+C$="Status:"
+G$="Connected to:"
+H$="¸ Telecommunications Software 1996"
+
+IF NOT EXIST("\opd\phoney.def")
+	J:
+ELSE
+	K:
+ENDIF
+
+E$="Orange"
+B$="0973538155"
+
+DEFAULTWIN 1
+STATUSWIN ON :FONT -$3fff,0
+GBORDER 0
+
+B%=GWIDTH :A%=GHEIGHT
+
+GIPRINT H$
+
+PAUSE 50
+
+GIPRINT "Drivers loaded"
+
+PAUSE 10
+
+BUSY "Initialising..."
+GAT 2,20
+GPRINTB D$,B%-4,3
+GAT 2,40
+GPRINTB C$,B%-4,3
+
+PAUSE 50
+
+GAT 2,20
+GPRINTB D$+"  Logging on...",B%-4,3
+
+PAUSE 50
+
+GIPRINT "Logged on to "+CHR$(34)+E$+CHR$(34)+" network"
+GAT 2,20
+GPRINTB D$+"  Established ("+E$+")",B%-4,3
+A:
+BUSY OFF
+
+PAUSE 20
+
+
+DO
+	Z%=B%:
+	IF Z%=$122
+		MINIT
+		MCARD "Connect","New call",%c,"End call",%e
+		MCARD "Call divert","Divert on busy",%b,"Divert on no answer",%n,"Divert if not reachable",%r,"Cancel all diverts",%u
+		MCARD "Do not disturb","Divert all calls",%a,"Divert all calls to voicemail",%v,"Silent alert",%l
+		MCARD "Setup","Dialling defaults",%d
+		MCARD "Special","Status",%s,"Exit",%x
+		LOCK ON
+		Z%=MENU AND $ffdf
+		LOCK OFF
+		IF Z% AND Z%<>%X
+			S$="C"+CHR$(Z%)
+			@(S$):
+		ENDIF
+	ELSEIF Z% AND $200
+		Z%=(Z%-$200) AND $ffdf
+		Z%=LOC(P$,CHR$(Z%))
+		IF Z%
+			IF Z%=5
+				Z%=%X
+			ELSE
+				S$="C"+MID$(P$,Z%,1)
+				@(S$):
+			ENDIF
+		ENDIF
+	ELSEIF Z%=27
+		DINIT "Quit TeleLink?"
+		DBUTTONS "No",-%N,"Yes",%Y
+		LOCK ON
+		Z%=DIALOG AND $ffdf
+		IF Z%=%Y
+			Z%=%X
+		ENDIF
+		LOCK OFF
+	ELSEIF Z%=291
+		IF NOT EXIST (LEFT$(CMD$(1),LEN(CMD$(1))-3)+"hlp")
+			GIPRINT "No help available"
+		ELSE
+			N:
+		ENDIF
+	ENDIF
+UNTIL Z%=%X
+ENDP
+
+PROC B%:
+LOCAL Y%(6),O$(1),T$(128)
+DO
+	GETEVENT Y%()
+	IF Y%(1)=$404
+		T$=GETCMD$
+		O$=LEFT$(T$,1)
+		T$=MID$(T$,2,128)
+		IF O$="X"
+			Y%(1)=%X
+		ENDIF
+	ENDIF
+UNTIL NOT (Y%(1) AND $400)
+RETURN Y%(1)
+ENDP
+
+
+PROC J:
+ENDP
+
+PROC K:
+ENDP
+
+PROC B:
+LOCAL U$(128)
+U$=C$+"  Off Hook"
+IF A$<>""
+	U$=U$+" (Divert all calls to: "+A$+")"
+ENDIF
+C:(4)
+GAT 2,40
+GPRINTB U$,B%-4,3
+ENDP
+
+PROC A:
+LOCAL U$(128)
+U$=C$+"  On Hook"
+IF A$ <>""
+	U$=U$+" (Divert all calls to: "+A$+")"
+ENDIF
+GAT 2,40
+GPRINTB U$,B%-4,3
+GAT 2,60
+GPRINTB REPT$(" ",70),B%-4,3
+C:(2)
+ENDP
+
+PROC U:
+
+DINIT "Call Setup"
+DEDIT B$,"Number to dial:",15
+LOCK ON
+IF DIALOG
+
+	BUSY "Dialling..."
+	B:
+	GAT 2,60
+	GPRINTB "Dialling:"+"  "+B$,B%-4,3
+	H:
+	I:(B$)
+	BUSY OFF
+
+	PAUSE 20
+
+	IF EXIST(F$)
+		GIPRINT "Connected"
+		GAT 2,60
+		GPRINTB G$+"  "+B$,B%-4,3
+		F:
+		GAT 2,60
+		GPRINTB G$+"  "+B$+" (Answered at "+RIGHT$("0"+GEN$(HOUR,2),2)+":"+RIGHT$("0"+GEN$(MINUTE,2),2)+":"+RIGHT$("0"+GEN$(SECOND,2),2)+")",B%-4,3
+		GIPRINT "Call Answered"
+		G:(F$)
+		E:
+		GIPRINT "Clearing down"
+		A:
+		PAUSE 20
+	ELSE
+		GIPRINT "Number busy"
+		D:
+	ENDIF
+ENDIF
+LOCK OFF
+ENDP
+
+PROC R:
+ENDP
+
+PROC Q:
+ENDP
+
+PROC O:
+ENDP
+
+PROC P:
+LOCAL N$(24)
+DINIT "Divert all calls"
+DEDIT A$,"Divert to:",15
+LOCK ON
+IF DIALOG
+
+	BUSY "Setting diversion..."
+	N$=A$
+	A$=""
+	B:
+	A$=N$
+	GAT 2,60
+	GPRINTB "Sending:"+"  *21*"+A$+"#",B%-4,3
+	PAUSE 50
+	A:
+	BUSY OFF
+	GIPRINT "Done"
+ENDIF
+LOCK OFF
+ENDP
+
+PROC S:
+BUSY "Cancelling diversion..."
+B:
+GAT 2,60
+GPRINTB "Sending:"+"  #21#",B%-4,3
+A$=""
+PAUSE 50
+A:
+BUSY OFF
+GIPRINT "Done"
+LOCK OFF
+ENDP
+
+PROC H:
+LOCAL X%,A%
+LOCAL AA%(14),AB%(14)
+LOCAL V%,U%,T%
+X%=IOOPEN(A%,"SND:",-1)
+IF X%<0
+	RAISE X%
+ELSE
+	AA%(1)=450 :AA%(2)=128
+	U%=1
+	AB%(1)=350 :AB%(2)=128
+	T%=1
+	IOC(A%,1,V%,AA%(),U%)
+	IOW(A%,2,AB%(),T%)
+	IOWAITSTAT V%
+	IOCLOSE(A%)
+ENDIF
+ENDP
+
+
+PROC F:
+LOCAL X%,A%
+LOCAL AA%(24),AB%(24)
+LOCAL V%,U%,T%
+X%=IOOPEN(A%,"SND:",-1)
+IF X%<0
+	RAISE X%
+ELSE
+	AA%(1)=450  :AA%(2)=26
+	AA%(3)=0    :AA%(4)=12
+	AA%(5)=450  :AA%(6)=26
+	AA%(7)=0    :AA%(8)=128
+	AA%(9)=450  :AA%(10)=26
+	AA%(11)=0   :AA%(12)=12
+	AA%(13)=450 :AA%(14)=26
+	AA%(15)=0   :AA%(16)=128
+	AA%(17)=450 :AA%(18)=26
+	AA%(19)=0   :AA%(20)=12
+	AA%(21)=450 :AA%(22)=26
+	AA%(23)=0   :AA%(24)=128
+	U%=12
+	AB%(1)=400  :AB%(2)=26
+	AB%(3)=0    :AB%(4)=12
+	AB%(5)=400  :AB%(6)=26
+	AB%(7)=0    :AB%(8)=128
+	AB%(9)=400  :AB%(10)=26
+	AB%(11)=0   :AB%(12)=12
+	AB%(13)=400 :AB%(14)=26
+	AB%(15)=0   :AB%(16)=128
+	AB%(17)=400 :AB%(18)=26
+	AB%(19)=0   :AB%(20)=12
+	AB%(21)=400 :AB%(22)=26
+	AB%(23)=0   :AB%(24)=128
+	T%=12
+	IOC(A%,1,V%,AA%(),U%)
+	IOW(A%,2,AB%(),T%)
+	IOWAITSTAT V%
+	IOCLOSE(A%)
+ENDIF
+ENDP
+
+
+PROC E:
+
+ENDP
+
+
+PROC D:
+LOCAL X%,A%
+LOCAL AA%(16),AB%(16)
+LOCAL V%,U%,T%
+X%=IOOPEN(A%,"SND:",-1)
+IF X%<0
+	RAISE X%
+ELSE
+	AA%(1)=400 :AA%(2)=24
+	AA%(3)=0:AA%(4)=24
+	AA%(5)=400 :AA%(6)=24
+	AA%(7)=0 :AA%(8)=24
+	AA%(9)=400 :AA%(10)=24
+	AA%(11)=0 :AA%(12)=24
+	AA%(13)=400 :AA%(14)=24
+	AA%(15)=0 :AA%(16)=24
+	U%=8
+	AB%(1)=400 :AB%(2)=24
+	AB%(3)=0 :AB%(4)=24
+	AB%(5)=400 :AB%(6)=24
+	AB%(7)=0 :AB%(8)=24
+	AB%(9)=400 :AB%(10)=24
+	AB%(11)=0 :AB%(12)=24
+	AB%(13)=400 :AB%(14)=24
+	AB%(15)=0 :AB%(16)=24
+	T%=8
+	IOC(A%,1,V%,AA%(),U%)
+	IOW(A%,2,AB%(),T%)
+	IOWAITSTAT V%
+	IOCLOSE(A%)
+ENDIF
+ENDP
+
+
+PROC I:(J$)
+LOCAL A%,E&,D&,B&,S$(24),K$(25),C%,W%,Y%(2)
+W%=IOOPEN(A%,"SND:",0)
+IF W%<0
+	RAISE W%
+ELSE
+	E&=4
+	D&=2
+	B&=32
+	
+	
+	
+	
+	
+	
+	
+		Y%(1)=E&+(256*D&)
+		Y%(2)=B&
+		K$=J$+CHR$(0)
+		W%=IOW(A%,10,#UADD(ADDR(K$),1),Y%())
+		IF W%<0
+			RAISE W%
+		ENDIF
+	
+	W%=IOCLOSE(A%)
+	IF W%<0
+		RAISE W%
+	ENDIF
+ENDIF
+ENDP
+
+
+PROC G:(T$)
+LOCAL P%,L%,J%(4),N%,X%,O%
+LOCAL L$(128)
+L$=T$
+N%=0
+L:(ADDR(P%),L$,N%,0)
+IOC(-2,1,L%,J%())
+WHILE 1
+	IOWAIT
+	IF P%<>-46
+		IOCANCEL(-2)
+		IOWAITSTAT L%
+		IF P%<0
+			GIPRINT "Error Playing: "+ERR$(P%)
+		ENDIF
+		BREAK
+	ELSEIF L%<>-46
+		M:
+		IOWAITSTAT P%
+		GIPRINT "Cancelled"
+		BREAK
+	ELSE
+		O%=O%+1
+	ENDIF
+ENDWH
+WHILE O%
+	IOSIGNAL
+	O%=O%-1
+ENDWH
+ENDP
+
+PROC L:(H%,R$,N%,I%)
+LOCAL M$(128)
+M$=R$+CHR$(0)
+CALL($1e86,UADD(ADDR(M$),1),N%,I%,0,H%)
+ENDP
+
+PROC M:
+CALL($2086)
+ENDP
+
+PROC A%:(G%)
+LOCAL Q%,E%,D%
+LOCAL Q$(128),S%(100)
+LOCAL A%,R%,K%
+
+Q$=CMD$(1)
+R%=IOOPEN(A%,Q$,$400)
+
+IF R% 
+	GOTO A:: 
+ENDIF
+
+R%=IOREAD(A%,ADDR(S%(1)),200)
+
+IF R%<=140 
+	GOTO B:: 
+ENDIF
+
+IF S%(1)<>%O+(%P*256)
+	GOTO B::
+ENDIF
+
+IF S%(2)<>%L+(%O*256)
+	GOTO B::
+ENDIF
+
+K%=23+(S%(11) AND $ff)
+R%=PEEKW(ADDR(S%(1))+K%)
+
+IF R%<>%P+(%I*256)
+	GOTO B::
+ENDIF
+
+IF R%=0 
+	GOTO B:: 
+ENDIF
+
+CALL($5f8d,1,K%,0,0,0)
+
+B::
+IOCLOSE(A%)
+A::
+
+Q%=GLOADBIT(Q$,0,G%)
+RETURN Q%
+ENDP
+
+PROC C:(F%)
+LOCAL Y%,Q%
+Q%=F%
+GUSE 1
+GAT 20,100
+GGREY 0
+GFILL 48,48,1
+GGREY 1
+GFILL 48,48,1
+GUSE 1 :GGREY 0
+Y%=A%:(Q%)
+GUSE 1 :GGREY 0
+GAT 20,100 :GCOPY Y%,0,0,48,48,0
+GCLOSE Y%
+GUSE 1 :GGREY 1
+Y%=A%:(Q%+1)
+GUSE 1 :GGREY 1
+GAT 20,100 :GCOPY Y%,0,0,48,48,0
+GCLOSE Y%
+GGREY 0
+ENDP
+
+PROC N:
+LOCAL M%,S%(65),R$(130)
+LOCAL C&,A&
+
+C&=1 :A&=1
+R$=LEFT$(CMD$(1),LEN(CMD$(1))-3)+"hlp"
+
+POKE$ ADDR(S%(1)),"#"+R$
+
+M%=PEEKW($38)
+SEND(M%,27,S%(2)) :
+SEND(M%,26,#C&,#A&) :
+ENDP
+

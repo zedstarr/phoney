@@ -1,0 +1,64 @@
+The Help Kit
+
+#begin
+Compiler
+The compiler has some well designed subsystems in it.
+Unfortunately I kind of threw the top layers over it
+in too much of a hurry.
+
+But at least it works, and it is only a programmers tool.
+
+What I hope is that it will inspire someone to write a nice one.
+I don't really have the time for this, as I feel my time is better
+spent as an OPL 'facilitator' in areas of special interest to
+external developers.
+#end
+
+#begin
+This example
+The source for this example is Helpxmpl.hlp
+I have chosen to put it in my OPD directory
+as that is a good place for all miscellaneous
+OPL resources.
+#end
+
+#begin
+Things to do
+Series 3 Classic version
+This requires extensive system knowledge.
+
+XWIM version of compiler
+This would allow direct translation
+from the menu.
+
+Embedding tool for OPL
+This would allow resources to be stored
+in OPO and OPA files.
+Such a tool would need to add a proper
+signature to the resource file.
+
+Adding system items.
+You can use specially selected items from the
+main system help for inclusion in your index.
+The compiler currently does not allow this, but
+it may be a nice facility to add.
+#end
+
+#begin
+Inspiration
+This little research project was inspired by the 
+excellent work of Tom Dolbilin, whos contributions
+to the Psion community are greatly appreciated.
+#end
+
+#begin
+Author
+This code was written by Jezar
+as an independant project whilst
+working at Psion.
+
+Thanks to DW for additional system
+information
+#end
+
+

@@ -1,0 +1,475 @@
+PROC main%:
+	LOCAL name$(130)
+	
+	name$="\opd\.hlp"
+main::
+	ONERR done
+	dINIT "Help compiler"
+	dFILE name$,"Source",0
+	IF DIALOG=0
+		RETURN
+	ENDIF
+	DoComp%:(name$)
+	RAISE 0
+	
+done::
+	ONERR OFF
+	IF ERR<0
+		PRINT ERR$(ERR)
+		GOTO main
+	ELSEIF ERR>0
+		GOTO main
+	ELSE
+		PRINT "Finished compiling."
+	ENDIF
+	
+	PRINT "Press ENTER to quit."
+	WHILE GET<>13 :ENDWH
+ENDP
+
+proc decode$:(a$)
+	local t$(255),i%
+	t$=a$
+	
+	while 1
+		i%=i%+1
+		if i%>len(t$)
+			break
+		endif
+		if mid$(t$,i%,1)="#"
+			if ishash%:(t$,i%)
+				t$=replace$:(t$,i%)
+				i%=i%-1
+			endif
+		endif
+	endwh
+	return t$
+endp
+
+proc replace$:(a$,pos%)
+	local c%
+	
+	c%=VAL(mid$(a$,pos%+1,3))
+	return LEFT$(a$,pos%-1)+chr$(c%)+right$(a$,len(a$)-pos%-3)
+endp
+
+proc ishash%:(a$,pos%)
+	local i%,t%,ch$(1)
+	
+	t%=pos%+3
+	i%=pos%
+	while i%<t%
+		i%=i%+1
+		ch$=MID$(a$,i%,1)
+		if ch$<"0" or ch$>"9"
+			return 0
+		endif
+	endwh
+	return -1
+endp
+
+PROC CPtopic%:
+REM  Write the main topic resource
+	
+	CPptr%=USR(UADD%,CPptr%,1,0,0)
+	POKE$ CPptr%,PPtitle$+CHR$(0)+CHR$(0)
+	CPptr%=USR(UADD%,CPptr%,-1,0,0)
+	POKEW CPptr%,PPidx%+2
+	RETURN LEN(PPtitle$)+4
+ENDP
+
+PROC CPindex%:
+	LOCAL nitems%
+	
+	POKEB CPptr%,PPidx%
+	CPptr%=USR(UADD%,CPptr%,1,0,0)
+	WHILE nitems%<PPidx%
+		nitems%=nitems%+1
+		POKEW CPptr%,nitems%+1
+		CPptr%=USR(UADD%,CPptr%,2,0,0)
+	ENDWH
+	RETURN 1+2*nitems%
+ENDP
+
+PROC CPbody%:
+REM  Write the individual topics
+	LOCAL buf$(255),line%,origptr%,count%
+	LOCAL byte%,written%
+	
+	WHILE line%<PPtopic%(CPidx%)
+		buf$=GetLine$:+CHR$(0)
+		line%=PFRline%:
+	ENDWH
+	origptr%=CPptr%
+	
+	REM Write topic name:
+	CPptr%=USR(UADD%,CPptr%,1,0,0)
+	POKE$ CPptr%,buf$
+	CPptr%=USR(UADD%,CPptr%,LEN(buf$)+1,0,0)
+	byte%=PPsize%(CPidx%)
+	
+	WHILE count%<PPsize%(CPidx%)
+		count%=count%+1
+		buf$=GetLine$:+CHR$(0)
+		POKE$ CPptr%,buf$
+		POKEB CPptr%,byte%
+		CPptr%=USR(UADD%,CPptr%,LEN(buf$),0,0)
+		byte%=0
+	ENDWH
+	
+	POKEW origptr%,0
+	written%=USR(UADD%,CPptr%,-origptr%,0,0)
+	RETURN written%+1
+ENDP
+
+PROC CPwrite%:(buf%,nitems%)
+	GLOBAL UADD&,UADD%,CPptr%,CPidx%
+	
+	CPptr%=buf%
+	UADD&=&CBC303
+	UADD%=ADDR(UADD&)
+	CPidx%=nitems%-1
+	print cpidx%,ppidx%
+	IF CPidx%=0
+		RETURN CPtopic%:
+	ELSEIF CPidx%<=PPidx%
+		RETURN CPbody%:
+	ELSEIF CPidx%=PPidx%+1
+		RETURN CPindex%:
+	ELSE
+		RETURN 0
+	ENDIF
+ENDP
+
+
+PROC CPmain%:
+REM  Main compiler pass
+REM  CPname$ is assumed to be set up
+REM  as the output name.
+	busy "Processing"
+	RWinit%:("CPwrite",CPname$)
+ENDP
+
+PROC DoComp%:(title$)
+	GLOBAL PPidx%,PPtopic%(255),PPsize%(255)
+	GLOBAL PPtitle$(80),PPpath$(130),CPname$(130)
+	LOCAL o%(8)
+	
+	ONERR done
+	PFRinit%:("PPmain",title$)
+	CPname$=PARSE$("\opd\.rsc",title$,o%())
+	CPname$=PARSE$(PPpath$,CPname$,o%())
+	PFRinit%:("CPmain",title$)
+	RAISE 0
+	
+done::
+	ONERR OFF
+	BUSY OFF
+	IF ERR
+		RAISE ERR
+	ENDIF
+ENDP
+
+PROC PPmain%:
+	LOCAL buf$(255)
+	
+	ONERR done
+	busy "Analysing"
+	PPtitle$=GetText$:
+	IF Begin%:(PPtitle$)
+		RAISE -85
+	ENDIF
+	IF End%:(PPtitle$)
+		RAISE -85
+	ENDIF
+	
+	PPpath$=GetText$:
+	IF Begin%:(PPpath$)
+		PPpath$=""
+		PPtop%:(GetText$:)
+	ENDIF
+	WHILE 1
+		buf$=GetText$:
+		IF Begin%:(buf$)
+			PPtop%:(GetText$:)
+		ELSE
+			RAISE -85
+		ENDIF
+	ENDWH
+	
+done::
+	ONERR OFF
+	IF ERR<>-36
+		PRINT ERR$(ERR)+" at line "+GEN$(PFRline%:,10)
+		RAISE -ERR
+	ENDIF
+ENDP
+
+PROC PPtop%:(text$)
+	LOCAL buf$(255),line%,size%
+	
+	IF Begin%:(text$) OR End%:(text$)
+		RAISE -85
+	ENDIF
+	
+	
+	line%=PFRline%:
+	buf$=GetLine$:
+	size%=PPtext%:(buf$)
+	
+	PPidx%=PPidx%+1
+	PPtopic%(PPidx%)=line%
+	PPsize%(PPidx%)=size%
+ENDP
+
+
+
+
+PROC PPtext%:(text$)
+	LOCAL buf$(255),count%
+	
+	ONERR error
+	IF End%:(text$)
+		RAISE -85
+	ENDIF
+	
+	DO
+		buf$=GetLine$:
+		IF Begin%:(buf$)
+			RAISE -85
+		ENDIF
+		count%=count%+1
+	UNTIL End%:(buf$)
+	
+	RETURN count%
+	
+error::
+	ONERR OFF
+	IF ERR=-36
+		RAISE -85
+	ELSE
+		RAISE ERR
+	ENDIF
+ENDP
+
+PROC End%:(text$)
+	IF UPPER$(LEFT$(Trim$:(text$),4))="#END"
+		RETURN -1
+	ENDIF
+ENDP
+
+PROC Begin%:(text$)
+	IF UPPER$(LEFT$(Trim$:(text$),6))="#BEGIN"
+		RETURN -1
+	ENDIF
+ENDP
+
+PROC GetLine$:
+	return decode$:(PFRread$:)
+ENDP
+
+PROC GetText$:
+	LOCAL buf$(255)
+	
+	DO
+		buf$=GetLine$:
+	UNTIL Trim$:(buf$)<>""
+	
+	RETURN buf$
+ENDP
+
+REM ----------------------------------------
+REM Resource compiler engine.
+REM (General purpose - writes ANY .rsc file!)
+
+PROC RWinit%:(func$,fname$)
+	GLOBAL RWindex%(512),RWchan%
+	LOCAL offset%,idxlen%,nitems%,err%,fsize%
+	
+	ONERR done
+	
+	REM Open file for writing:
+	RWchan%=IoOpen%:(fname$,$0302,0)
+	
+	REM Write 4 bytes of junk at head:
+	IoWrite%:(RWchan%,ADDR(offset%),4)
+	
+	REM Write the actual resources:
+	nitems%=RWwrite%:(func$)
+	
+	REM Get current position in file:
+	offset%=IoSeek%:(RWchan%,3,&0)
+	
+	REM Write the resource index table:
+	IoWrite%:(RWchan%,ADDR(RWindex%()),nitems%*2)
+	
+	REM Get current position in file:
+	fsize%=IoSeek%:(RWchan%,3,&0)
+	
+	REM Write index position and length:
+	IoSeek%:(RWchan%,1,&0) :REM Start of file
+	idxlen%=nitems%*2 :REM 2 bytes per entry
+	IoWrite%:(RWchan%,ADDR(offset%),4)
+	RAISE 0 :REM Finished OK
+	
+done::
+	ONERR OFF
+	IOCLOSE(RWchan%)
+	IF ERR
+		err%=ERR
+		TRAP DELETE fname$
+		RAISE err%
+	ENDIF
+	RETURN fsize%
+ENDP
+
+PROC RWwrite%:(func$)
+REM  Routine to write individual resources.
+REM  Used privately by the 'RWinit%'
+REM  Calls back YOUR function,
+REM  see the spec for 'RWinit%' above.
+	
+	GLOBAL RWbuf&(1024) :REM 4k buffer
+	GLOBAL RWbuf%
+	LOCAL nitems%,next%,size%
+	
+	RWbuf%=ADDR(RWbuf&(1))
+	RWindex%(1)=4
+	
+	WHILE 1
+		nitems%=nitems%+1
+		size%=@%(func$):(RWbuf%,nitems%)
+		RWindex%(nitems%+1)=size%+RWindex%(nitems%)
+		IF size%=0
+			BREAK
+		ENDIF
+		IoWrite%:(RWchan%,RWbuf%,size%)
+	ENDWH
+	
+	RETURN nitems%
+ENDP
+
+REM -----------------------------------------
+REM Standard I/O routines with error handling
+
+PROC IoOpen%:(name$,mode%,oldhand%)
+REM  System version of IOOPEN
+REM  Cures some problems with the
+REM  Series 3 Classic version, and
+REM  adds proper error mechanism.
+	
+	LOCAL ax%,bx%,cx%,dx%,si%,di%
+	LOCAL txt%(129)
+	
+	REM Convert name to ZTS:
+	POKE$ ADDR(txt%(1)),"#"+name$
+	
+	bx%=ADDR(txt%(2))
+	cx%=mode%
+	dx%=oldhand%
+	IF (OS($85,ADDR(ax%)) AND 1)
+		RAISE (ax% OR $FF00)
+	ENDIF
+	RETURN ax%
+ENDP
+
+PROC IoRead%:(hand%,adr%,size%)
+REM  Error-handling version of IOREAD
+	
+	LOCAL ret%
+	
+	ret%=IOREAD(hand%,adr%,size%)
+	IF ret%<0
+		RAISE ret%
+	ENDIF
+	
+	RETURN ret%
+ENDP
+
+PROC IoWrite%:(hand%,adr%,size%)
+REM  Error-handling version of IOWRITE
+	
+	LOCAL ret%
+	
+	ret%=IOWRITE(hand%,adr%,size%)
+	IF ret%<0
+		RAISE ret%
+	ENDIF
+ENDP
+
+PROC IoSeek%:(hand%,mode%,newpos&)
+REM  Error-handling version of IOSEEK
+	
+	LOCAL ret%,pos&
+	
+	pos&=newpos&
+	
+	ret%=IOSEEK(hand%,mode%,pos&)
+	IF ret%<0
+		RAISE ret%
+	ENDIF
+	
+	RETURN pos&
+ENDP
+
+REM --------------------------------
+REM General purpose string functions
+
+PROC Trim$:(string$)
+REM  Trim leading spaces
+	
+	LOCAL tr$(255)
+	
+	tr$=string$
+	
+	WHILE LEFT$(tr$,1)=" "
+		IF LEN(tr$)=1
+			RETURN
+		ENDIF
+		tr$=MID$(tr$,2,255)
+	ENDWH
+	
+	RETURN tr$
+ENDP
+
+REM --------------------------
+REM Simple passive file reader
+
+PROC PFRinit%:(func$,fname$)
+	GLOBAL PFRhand%,PFRlcnt%
+	
+	ONERR done
+	PFRhand%=IoOpen%:(fname$,$0020,0)
+	@%(func$):
+	RAISE 0
+	
+done::
+	ONERR OFF
+	IOCLOSE(PFRhand%)
+	IF ERR
+		RAISE ERR
+	ENDIF
+ENDP
+
+PROC PFRread$:
+	LOCAL buf%(130),bufZTS%,bufLBC%
+	
+	bufLBC%=ADDR(buf%(1))
+	bufZTS%=ADDR(buf%(2))
+	
+	IoRead%:(PFRhand%,bufZTS%,254)
+	buf%(1)=CALL($B9,0,0,0,0,bufZTS%)+1
+	
+	PFRlcnt%=PFRlcnt%+1
+	RETURN MID$(PEEK$(bufLBC%),2,255)
+ENDP
+
+PROC PFRline%:
+REM  Return the current line number:
+	
+	RETURN PFRlcnt%
+ENDP
+
+REM -----------------
+
+REM End of file 

@@ -1,0 +1,128 @@
+"PHONEY01.ZIP"
+
+For all you tricksters out there! A small OPL application and associated 
+.WVE file to make your 3a impersonate a handsfree phone.
+
+If you know someone with a mobile phone (and possibly someone with the 
+Vodafone Telenote s/w) get the better of them (for a few moments at 
+least!) by running "PHONEY".
+
+Tell people that the latest PSION has a built in digital mobile phone!
+
+When loaded, "Phoney" prompts you for the number to dial.
+
+It them emulates the call sequence by playing a brief snippet of 
+dial-tone, the MF digits, awaiting answer tone and then a voice saying 
+"Hello...". You can customise the greeting by recording your own 
+.WVE file that the program will play on "answer". You could even record
+an answerphone-like message and pretend to leave a message! 
+
+Complicated scams can be set up by plugging a lead between the PSION and 
+any mobile phone and pretend that the actual conversation is happening 
+*via* the mobile!
+
+This is an early release of Phoney - I may in the future upgrade the 
+graphics and user interface to make it more convincing. Or even emulate 
+an incoming call...
+
+The ZIP file PHONEY01.ZIP contains:
+
+PHONEY01.TXT  (This File)
+PHONEY01.OPA  The application program
+PHONEY01.HLP  Optional help file
+PHONEY01.WVE  Sound file to play on answer.
+
+
+Installation
+------------
+
+1. Copy the file PHONEY01.OPA to the \APP directory on any local drive 
+   and install the program in the system screen as described in the user 
+   manual. 
+
+2. Copy the file PHONEY01.WVE to either a \WVE or \SND directory on any 
+   local drive. 
+
+3. If you wish to make use of the online help system, then also copy the 
+   file PHONEY01.HLP to the same \APP directory as you copied PHONEY01.OPA 
+   to. (This step is optional - bear in mind that this file does not give 
+   you any *real* help - it is provided merely to make the app. look more
+   convincing!).
+
+Running PHONEY
+--------------
+
+When Phoney is run for the first time it asks you to set up a few default 
+values. These are stored in a file called PHONEY01.DEF in the \OPD directory.
+
+Simulating an outgoing call
+---------------------------
+
+Select the "New Call" item from the menu (or use the PSION-C hotkey) and
+type in the phone number to "call". Sit back and watch...
+PHONEY will play a brief snippet of dial tone, then the MF digits of the
+number you have entered. If the file PHONEY01.WVE exists then this will be
+played, otherwise busy tone (engaged) will be played). At this point (when
+WVE file is playing you can cancel playback by pressing any key). When the
+file has finished playing the call will clear.
+
+Customisation
+-------------
+
+When the program "answers" the call, it plays the file PHONEY01.WVE. This 
+file is supplied containing only the phrase "Hello..." but it is possible 
+using the built-in RECORD application to record your own PHONEY01.WVE file 
+and as long as it exists in a \WVE or \SND directory Phoney will play it. 
+If you add a few seconds of trailing silence using RECORD, you could 
+record an answerphone-like greeting and then pretend to leave a message. 
+The possibilities for trickery are endless...
+
+Limitations
+-----------
+
+Because the dialling tone, ringing tone and busy tones are generated using
+the built-in tone generator, they appear to be quieter than the MF tones and
+the .WVE file playback. This is due to the frequency response of the 3a 
+speaker.
+In this release, during the playing of tones, the application effectively
+goes deaf to keypresses, and you have to wait for the sound to stop. I may
+change this in future versions of PHONEY. (Although PSION-Esc still works 
+and will break out of the app)
+
+Uninstallation
+--------------
+
+If you wish to uninstall the program, remember to remove all the following
+files:
+
+\APP\PHONEY01.OPA
+\APP\PHONEY01.HLP (If installed)
+\WVE\PHONEY01.WVE  (Or \SND\PHONEY01.WVE depending on where you put it)
+\OPD\PHONEY01.DEF
+
+Disclaimer
+----------
+This program is only meant as a fun gimmick and should not be used for 
+deception or fraudulent purposes.
+
+Use of this program is at your own risk. Care has been taken to make 
+this program as error free as possible, but the Author can not be held 
+responsible in any way for any data loss or damage howsoever caused 
+resulting from the use of this program.
+
+Credits
+-------
+
+The Help resource file was compiled using the OPL help compiler 
+originally written by Jezar.
+The on & off hook telephone icons were embedded in the OPA icon file and 
+are extracted by the "loadpic" procedure by Andrew Baldwin.
+
+
+Bug reports, ideas and suggestions to:
+
+Chris Farrow
+cxf@cix.compulink.co.uk
++44 (0)973 538155
+
+29/01/1996
