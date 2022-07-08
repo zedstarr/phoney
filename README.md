@@ -8,6 +8,8 @@ At the time I was using a Psion Series 3a along with the Vodafone "Telenote" app
 
 The app prestends to connect to the attached mobile network, allows the  user to enter a number a plays dial/MF/ringing tones. The app then plays a .WVE file that sounds like someone has picked up/answered the call. This file can be re-recorded/customised so you can have whoever/whatever you like answering your fake call :-D
 
+Only tested on Series 3a - 3c/mx YMMV!
+
 ## **Disclaimer**: 
 This repo is just a clone of the complete PHONEY folder that I found backed-up on a floppy (yes, an actual floppy disk!) and it's here for archival purposes only. If you wish to translate your own version you'll need to be familair with intermediate/advanced programming in OPL for SIBO/EPO16 computers. 
 
