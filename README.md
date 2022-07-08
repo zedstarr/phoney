@@ -1,6 +1,6 @@
 # phoney
 
-A spoof voice-call app for the Psion Series 3a
+A spoof voice-call app written for the Psion Series 3a
 
 Originally written in 1996 in Psion OPL.
 
