@@ -21,10 +21,10 @@ h$="CEDSXABNRVLUW" :prgnm$="PHONEY01"
 stat1$="Network Connection:"
 stat2$="Status:"
 stat3$="Connected to:"
-conm$="¸ Zedstarr Telecommunications 1996"
+conm$="Â¸ Zedstarr Telecommunications 1996"
 
 ntnm$="Vodanet"
-mtn$="0100000000"
+mtn$="01000000000"
 prot%=$007f
 if not exist ("\opd\"+prgnm$+".def")
 	create prgnm$+".def",a,ntnm$,mtn$,prot%
