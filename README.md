@@ -21,7 +21,12 @@ Only tested on Series 3a - for 3c/mx YMMV!
 This repo is just a clone of the complete PHONEY folder that I found backed-up on a floppy (yes, an actual floppy disk!) and it's here for archival purposes only. If you wish to translate your own version you'll need to be familiar with intermediate/advanced programming in OPL for SIBO/EPOC16 computers. 
 
   
-Also contained here are a lot of the (DOS) tools used to create this on a PC: S3ATRAN.EXE translator, WSPCX.EXE Psion PIC bitmap converter/combiner, AKA.EXE code obfuscator and Jezar's help compiler for OPL.
+Also contained here are some of the (DOS) tools used to create the APP on a PC: 
+
+* S3ATRAN.EXE translator, 
+* WSPCX.EXE Psion PIC bitmap converter/combiner, 
+* AKA.EXE code obfuscator and 
+* Jezar's help compiler for OPL.
 
 Oh and BTW *cxf@cix.compulink.co.uk* is long-dead too.
 
