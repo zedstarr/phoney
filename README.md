@@ -4,7 +4,7 @@
 
 Originally written in 1996 in Psion OPL.
   
-![Series 3a screenshot to TeleLink app running](https://github.com/zedstarr/phoney/raw/main/TELE0003.png)
+![Series 3a screenshot to TeleLink app running](https://github.com/zedstarr/phoney/raw/main/TELE0000.png)
   
   
 At the time I was using a Psion Series 3a along with the Vodafone "Telenote" app to send/receive SMS messages from the Psion via an attached Nokia GSM/PCN phone. I created this app as a prank to fool my colleagues at the time that I could also make/receive voice calls via the Psion/Nokia combo.
@@ -12,6 +12,8 @@ At the time I was using a Psion Series 3a along with the Vodafone "Telenote" app
 The app pretends to connect to the attached mobile network, allows the  user to enter a number and uses the built-in tone genrator to play dial/MF/ringing tones. The app then plays a .WVE file that sounds like someone has picked up/answered the call. This file can be re-recorded/customised so you can have whoever/whatever you like answering your fake call :-D
 
 ![Series 3a screenshot of TeleLink app running](https://github.com/zedstarr/phoney/raw/main/TELE0002.png)  
+
+![Series 3a screenshot of TeleLink app running](https://github.com/zedstarr/phoney/raw/main/TELE0001.png)  
   
 Only tested on Series 3a - for 3c/mx YMMV!
 
