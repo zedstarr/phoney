@@ -9,7 +9,7 @@ Originally written in 1996 in Psion OPL.
   
 At the time I was using a Psion Series 3a along with the Vodafone "Telenote" app to send/receive SMS messages from the Psion via an attached Nokia GSM/PCN phone. I created this app as a prank to fool my colleagues at the time that I could also make/receive voice calls via the Psion/Nokia combo.
 
-The app pretends to connect to the attached mobile network, allows the  user to enter a number and uses the built-in tone generator to play dial/MF/ringing tones. The app then plays a .WVE file that sounds like someone has picked up/answered the call. This file can be re-recorded/customised so you can have whoever/whatever you like answering your fake call :-D
+The app pretends to connect to an attached mobile network, allows the  user to enter a number and uses the built-in tone generator to play dial/MF/ringing tones. The app then plays a .WVE file that sounds like someone has picked up/answered the call. This file can be re-recorded/customised so you can have whoever/whatever you like answering your fake call :-D
 
 ![Series 3a screenshot of TeleLink app running](https://github.com/zedstarr/phoney/raw/main/TELE0002.png)  
 
@@ -28,7 +28,7 @@ Also contained here are some of the (DOS) tools used to create the APP on a PC:
 * AKA.EXE code obfuscator and 
 * Jezar's help compiler for OPL.
 
-Oh and BTW *cxf@cix.compulink.co.uk* is long-dead too.
+Oh and BTW the email address *cxf@cix.compulink.co.uk* is long-dead too.
 
 
 ENJOY!
